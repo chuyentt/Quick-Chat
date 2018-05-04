@@ -75,6 +75,14 @@ class WelcomeVC: UIViewController, UITextFieldDelegate, UINavigationControllerDe
         self.registerView.heightAnchor.constraint(equalTo: self.view.heightAnchor, multiplier: 0.6).isActive = true
         self.registerView.widthAnchor.constraint(equalTo: self.view.widthAnchor, multiplier: 0.8).isActive = true
         self.registerView.layer.cornerRadius = 8
+        
+        // Dùng để đăng nhập thủ công với thông tin đã lưu
+        if let userInformation = UserDefaults.standard.dictionary(forKey: "userInformation") {
+            let email = userInformation!["email"] as! String
+            let password = userInformation!["password"] as! String
+            self.loginEmailField.text = email
+            loginPasswordField.text = password
+        }
     }
    
     func cloundsAnimation() {
