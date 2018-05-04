@@ -219,11 +219,28 @@ class NavVC: UINavigationController, UICollectionViewDelegate, UICollectionViewD
     }
   
     @IBAction func logOutUser(_ sender: Any) {
-        User.logOutUser { (status) in
-            if status == true {
-                self.dismiss(animated: true, completion: nil)
+        let sheet = UIAlertController(title: nil, message: "User Information", preferredStyle: .actionSheet)
+        let logOutAndRemoveAction = UIAlertAction(title: "Remove", style: .default, handler: {
+            (alert: UIAlertAction!) -> Void in
+            User.logOutUser(removeUserInformation: true) { (status) in
+                if status == true {
+                    self.dismiss(animated: true, completion: nil)
+                }
             }
-        }
+        })
+        let logOutAction = UIAlertAction(title: "Keep", style: .default, handler: {
+            (alert: UIAlertAction!) -> Void in
+            User.logOutUser(removeUserInformation: false) { (status) in
+                if status == true {
+                    self.dismiss(animated: true, completion: nil)
+                }
+            }
+        })
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+        sheet.addAction(logOutAndRemoveAction)
+        sheet.addAction(logOutAction)
+        sheet.addAction(cancelAction)
+        self.present(sheet, animated: true, completion: nil)
     }
     
     //MARK: Delegates

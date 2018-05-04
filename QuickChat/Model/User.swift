@@ -42,7 +42,8 @@ class User: NSObject {
                 let imageData = UIImageJPEGRepresentation(profilePic, 0.1)
                 storageRef.putData(imageData!, metadata: nil, completion: { (metadata, err) in
                     if err == nil {
-                        let path = metadata?.downloadURL()?.absoluteString
+                        let path = metadata?.path
+                        //let path = metadata?.downloadURL()?.absoluteString
                         let values = ["name": withName, "email": email, "profilePicLink": path!]
                         Database.database().reference().child("users").child((user?.uid)!).child("credentials").updateChildValues(values, withCompletionBlock: { (errr, _) in
                             if errr == nil {
@@ -72,10 +73,12 @@ class User: NSObject {
         })
     }
     
-    class func logOutUser(completion: @escaping (Bool) -> Swift.Void) {
+    class func logOutUser(removeUserInformation: Bool, completion: @escaping (Bool) -> Swift.Void) {
         do {
             try Auth.auth().signOut()
-            UserDefaults.standard.removeObject(forKey: "userInformation")
+            if removeUserInformation {
+                UserDefaults.standard.removeObject(forKey: "userInformation")
+            }
             completion(true)
         } catch _ {
             completion(false)
@@ -87,14 +90,21 @@ class User: NSObject {
             if let data = snapshot.value as? [String: String] {
                 let name = data["name"]!
                 let email = data["email"]!
-                let link = URL.init(string: data["profilePicLink"]!)
-                URLSession.shared.dataTask(with: link!, completionHandler: { (data, response, error) in
-                    if error == nil {
-                        let profilePic = UIImage.init(data: data!)
-                        let user = User.init(name: name, email: email, id: forUserID, profilePic: profilePic!)
-                        completion(user)
-                    }
-                }).resume()
+                let profilePicLink = data["profilePicLink"]!
+                let storageRef = Storage.storage().reference(withPath: profilePicLink)
+                storageRef.downloadURL(completion: { (url, error) in
+                    let data = try! Data(contentsOf: url!)
+                    let profilePic = UIImage(data: data as Data)
+                    let user = User.init(name: name, email: email, id: forUserID, profilePic: profilePic!)
+                    completion(user)
+                })
+//                URLSession.shared.dataTask(with: link!, completionHandler: { (data, response, error) in
+//                    if error == nil {
+//                        let profilePic = UIImage.init(data: data!)
+//                        let user = User.init(name: name, email: email, id: forUserID, profilePic: profilePic!)
+//                        completion(user)
+//                    }
+//                }).resume()
             }
         })
     }
@@ -107,14 +117,23 @@ class User: NSObject {
             if id != exceptID {
                 let name = credentials["name"]!
                 let email = credentials["email"]!
-                let link = URL.init(string: credentials["profilePicLink"]!)
-                URLSession.shared.dataTask(with: link!, completionHandler: { (data, response, error) in
-                    if error == nil {
-                        let profilePic = UIImage.init(data: data!)
-                        let user = User.init(name: name, email: email, id: id, profilePic: profilePic!)
-                        completion(user)
-                    }
-                }).resume()
+                let profilePicLink = credentials["profilePicLink"]!
+                let storageRef = Storage.storage().reference(withPath: profilePicLink)
+                storageRef.downloadURL(completion: { (url, error) in
+                    let data = try! Data(contentsOf: url!)
+                    let profilePic = UIImage(data: data as Data)
+                    let user = User.init(name: name, email: email, id: id, profilePic: profilePic!)
+                    completion(user)
+                })
+//                
+//                let link = URL.init(string: credentials["profilePicLink"]!)
+//                URLSession.shared.dataTask(with: link!, completionHandler: { (data, response, error) in
+//                    if error == nil {
+//                        let profilePic = UIImage.init(data: data!)
+//                        let user = User.init(name: name, email: email, id: id, profilePic: profilePic!)
+//                        completion(user)
+//                    }
+//                }).resume()
             }
         })
     }

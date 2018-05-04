@@ -76,13 +76,19 @@ class Message {
     func downloadImage(indexpathRow: Int, completion: @escaping (Bool, Int) -> Swift.Void)  {
         if self.type == .photo {
             let imageLink = self.content as! String
-            let imageURL = URL.init(string: imageLink)
-            URLSession.shared.dataTask(with: imageURL!, completionHandler: { (data, response, error) in
-                if error == nil {
-                    self.image = UIImage.init(data: data!)
-                    completion(true, indexpathRow)
-                }
-            }).resume()
+            let storageRef = Storage.storage().reference(withPath: imageLink)
+            storageRef.downloadURL(completion: { (url, error) in
+                let data = try! Data(contentsOf: url!)
+                self.image = UIImage.init(data: data)
+                completion(true, indexpathRow)
+            })
+//
+//            URLSession.shared.dataTask(with: imageURL!, completionHandler: { (data, response, error) in
+//                if error == nil {
+//                    self.image = UIImage.init(data: data!)
+//                    completion(true, indexpathRow)
+//                }
+//            }).resume()
         }
     }
     
@@ -155,7 +161,8 @@ class Message {
                 let child = UUID().uuidString
                 Storage.storage().reference().child("messagePics").child(child).putData(imageData!, metadata: nil, completion: { (metadata, error) in
                     if error == nil {
-                        let path = metadata?.downloadURL()?.absoluteString
+                        let path = metadata?.path
+                        //let path = metadata?.downloadURL()?.absoluteString
                         let values = ["type": "photo", "content": path!, "fromID": currentUserID, "toID": toID, "timestamp": message.timestamp, "isRead": false] as [String : Any]
                         Message.uploadMessage(withValues: values, toID: toID, completion: { (status) in
                             completion(status)

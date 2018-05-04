@@ -75,6 +75,13 @@ class WelcomeVC: UIViewController, UITextFieldDelegate, UINavigationControllerDe
         self.registerView.heightAnchor.constraint(equalTo: self.view.heightAnchor, multiplier: 0.6).isActive = true
         self.registerView.widthAnchor.constraint(equalTo: self.view.widthAnchor, multiplier: 0.8).isActive = true
         self.registerView.layer.cornerRadius = 8
+        
+        // Dùng để đăng nhập thủ công với thông tin đã lưu
+        let userInformation = UserDefaults.standard.dictionary(forKey: "userInformation")
+        let email = userInformation!["email"] as! String
+        let password = userInformation!["password"] as! String
+        self.loginEmailField.text = email
+        loginPasswordField.text = password
     }
    
     func cloundsAnimation() {
@@ -151,7 +158,8 @@ class WelcomeVC: UIViewController, UITextFieldDelegate, UINavigationControllerDe
             item.resignFirstResponder()
         }
         self.showLoading(state: true)
-        User.registerUser(withName: self.registerNameField.text!, email: self.registerEmailField.text!, password: self.registerPasswordField.text!, profilePic: self.profilePicView.image!) { [weak weakSelf = self] (status) in
+        User.registerUser(withName: self.registerNameField.text!, email: self.registerEmailField.text!, password: self.registerPasswordField.text!, profilePic: self.profilePicView.image!) {
+            [weak weakSelf = self] (status) in
             DispatchQueue.main.async {
                 weakSelf?.showLoading(state: false)
                 for item in self.inputFields {
@@ -165,6 +173,7 @@ class WelcomeVC: UIViewController, UITextFieldDelegate, UINavigationControllerDe
                         item.isHidden = false
                     }
                 }
+                weakSelf = nil
             }
         }
     }
@@ -174,7 +183,8 @@ class WelcomeVC: UIViewController, UITextFieldDelegate, UINavigationControllerDe
             item.resignFirstResponder()
         }
         self.showLoading(state: true)
-        User.loginUser(withEmail: self.loginEmailField.text!, password: self.loginPasswordField.text!) { [weak weakSelf = self](status) in
+        User.loginUser(withEmail: self.loginEmailField.text!, password: self.loginPasswordField.text!) {
+            [weak weakSelf = self] (status) in
             DispatchQueue.main.async {
                 weakSelf?.showLoading(state: false)
                 for item in self.inputFields {
